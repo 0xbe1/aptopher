@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -80,17 +81,51 @@ func main() {
 	amount := uint64(1000)
 	fmt.Printf("Transferring %d octas...\n", amount)
 
-	// Build, sign, and submit the transaction
-	pending, err := client.TransferAPT(ctx, account, recipient.Address, amount)
+	// Create the transfer payload
+	payload := aptos.TransactionPayload{
+		Payload: &aptos.EntryFunction{
+			Module: aptos.ModuleId{
+				Address: aptos.AccountOne,
+				Name:    "aptos_account",
+			},
+			Function: "transfer",
+			TypeArgs: nil,
+			Args: [][]byte{
+				mustSerializeAddress(recipient.Address),
+				serializeU64(amount),
+			},
+		},
+	}
+
+	// Build the transaction
+	rawTxn, err := client.BuildTransaction(ctx, account.Address, payload)
 	if err != nil {
-		log.Fatalf("Failed to transfer: %v", err)
+		log.Fatalf("Failed to build transaction: %v", err)
+	}
+
+	// Sign the transaction
+	signedTxn, err := account.SignTransaction(rawTxn)
+	if err != nil {
+		log.Fatalf("Failed to sign transaction: %v", err)
+	}
+
+	// Get signed transaction bytes
+	txnBytes, err := signedTxn.Bytes()
+	if err != nil {
+		log.Fatalf("Failed to serialize transaction: %v", err)
+	}
+
+	// Submit the transaction
+	pending, err := client.SubmitTransaction(ctx, txnBytes)
+	if err != nil {
+		log.Fatalf("Failed to submit transaction: %v", err)
 	}
 
 	fmt.Printf("Transaction submitted: %s\n", pending.Data.Hash)
 
 	// Wait for transaction to be committed
 	fmt.Println("Waiting for transaction...")
-	txn, err := client.WaitForTransaction(ctx, pending.Data.Hash)
+	txn, err := client.WaitForTransactionByHash(ctx, pending.Data.Hash)
 	if err != nil {
 		log.Fatalf("Failed waiting for transaction: %v", err)
 	}
@@ -105,4 +140,14 @@ func main() {
 
 func bytesToHex(b [32]byte) string {
 	return "0x" + hex.EncodeToString(b[:])
+}
+
+func mustSerializeAddress(addr aptos.AccountAddress) []byte {
+	return addr[:]
+}
+
+func serializeU64(v uint64) []byte {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, v)
+	return buf
 }

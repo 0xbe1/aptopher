@@ -527,17 +527,3 @@ func (m *ModuleId) UnmarshalBCS(des *bcs.Deserializer) {
 	m.Name = des.String()
 }
 
-// Common type tags
-var (
-	// AptosCoinTypeTag is the type tag for APT coin.
-	AptosCoinTypeTag = TypeTag{Value: &StructTag{
-		Address: AccountOne,
-		Module:  "aptos_coin",
-		Name:    "AptosCoin",
-	}}
-)
-
-// AptosCoinType returns the string representation of the APT coin type.
-func AptosCoinType() string {
-	return "0x1::aptos_coin::AptosCoin"
-}

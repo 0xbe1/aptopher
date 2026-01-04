@@ -110,9 +110,3 @@ func TestModuleId(t *testing.T) {
 	}
 }
 
-func TestAptosCoinTypeTag(t *testing.T) {
-	want := "0x1::aptos_coin::AptosCoin"
-	if got := AptosCoinTypeTag.String(); got != want {
-		t.Errorf("AptosCoinTypeTag.String() = %v, want %v", got, want)
-	}
-}

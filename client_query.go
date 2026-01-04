@@ -209,15 +209,6 @@ func (c *Client) SubmitTransaction(ctx context.Context, signedTxnBytes []byte) (
 	return Response[PendingTransaction]{Data: result, Metadata: metadata}, nil
 }
 
-// SubmitAndWaitForTransaction submits a transaction and waits for it to be committed.
-func (c *Client) SubmitAndWaitForTransaction(ctx context.Context, signedTxnBytes []byte) (Response[Transaction], error) {
-	pending, err := c.SubmitTransaction(ctx, signedTxnBytes)
-	if err != nil {
-		return Response[Transaction]{}, err
-	}
-
-	return c.WaitForTransactionByHash(ctx, pending.Data.Hash)
-}
 
 // SimulateOption is a function that modifies simulation options.
 type SimulateOption func(*SimulateOptions)

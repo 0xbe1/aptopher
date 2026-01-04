@@ -24,11 +24,14 @@
 //	    Arguments: []interface{}{address.String()},
 //	})
 //
-// Transfer APT:
+// Submit a transaction:
 //
 //	account, _ := aptos.AccountFromEd25519Seed(privateKey)
-//	pending, err := client.TransferAPT(ctx, account, recipient, amount)
-//	txn, err := client.WaitForTransaction(ctx, pending.Data.Hash)
+//	rawTxn, _ := client.BuildTransaction(ctx, account.Address, payload)
+//	signedTxn, _ := account.SignTransaction(rawTxn)
+//	txnBytes, _ := signedTxn.Bytes()
+//	pending, _ := client.SubmitTransaction(ctx, txnBytes)
+//	txn, _ := client.WaitForTransactionByHash(ctx, pending.Data.Hash)
 //
 // # Package Structure
 //
@@ -68,11 +71,7 @@
 //
 // # Transaction Building
 //
-// Transactions can be built, signed, and submitted in one call:
-//
-//	pending, err := client.BuildSignAndSubmitTransaction(ctx, account, payload)
-//
-// Or built step by step:
+// Build, sign, and submit transactions step by step:
 //
 //	rawTxn, err := client.BuildTransaction(ctx, sender, payload)
 //	signedTxn, err := account.SignTransaction(rawTxn)

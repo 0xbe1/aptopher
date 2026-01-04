@@ -78,30 +78,14 @@ json.Unmarshal(result.Data[0], &balance)
 fmt.Println("Balance:", balance)
 ```
 
-### Transfer APT
+### Submit a Transaction
 
 ```go
 // Create account from private key (32-byte Ed25519 seed)
 account, err := aptos.AccountFromEd25519Seed(privateKeyBytes)
 
-// Transfer APT
+// Create a payload (example: APT transfer)
 recipient, _ := aptos.ParseAccountAddress("0x123...")
-amount := uint64(100_000_000) // 1 APT = 100,000,000 octas
-
-pending, err := client.TransferAPT(ctx, account, recipient, amount)
-fmt.Println("Transaction hash:", pending.Data.Hash)
-
-// Wait for confirmation
-txn, err := client.WaitForTransaction(ctx, pending.Data.Hash)
-if txn.Data.Success {
-    fmt.Println("Transfer successful!")
-}
-```
-
-### Build Custom Transactions
-
-```go
-// Create a custom entry function payload
 payload := aptos.TransactionPayload{
     Payload: &aptos.EntryFunction{
         Module: aptos.ModuleId{
@@ -111,15 +95,27 @@ payload := aptos.TransactionPayload{
         Function: "transfer",
         TypeArgs: nil,
         Args: [][]byte{
-            recipientBytes,
-            amountBytes,
+            recipient[:],           // recipient address
+            serializeU64(100_000_000), // amount in octas (1 APT)
         },
     },
 }
 
-// Build, sign, and submit
-pending, err := client.BuildSignAndSubmitTransaction(ctx, account, payload)
+// Build the transaction
+rawTxn, err := client.BuildTransaction(ctx, account.Address, payload)
+
+// Sign the transaction
+signedTxn, err := account.SignTransaction(rawTxn)
+txnBytes, err := signedTxn.Bytes()
+
+// Submit and wait for confirmation
+pending, err := client.SubmitTransaction(ctx, txnBytes)
+txn, err := client.WaitForTransactionByHash(ctx, pending.Data.Hash)
+if txn.Data.Success {
+    fmt.Println("Transaction successful!")
+}
 ```
+
 
 ### Simulate Transactions
 
@@ -127,8 +123,27 @@ pending, err := client.BuildSignAndSubmitTransaction(ctx, account, payload)
 // Build a raw transaction
 rawTxn, err := client.BuildTransaction(ctx, account.Address, payload)
 
+// Create a fake signature for simulation
+fakeSignedTxn := &aptos.SignedTransaction{
+    RawTxn: rawTxn,
+    Authenticator: aptos.TransactionAuthenticator{
+        Variant: aptos.TransactionAuthenticatorSingleSender,
+        Auth: &aptos.AccountAuthenticatorSingleKey{
+            PublicKey: aptos.AnyPublicKey{
+                Variant:   account.Signer.Scheme(),
+                PublicKey: account.Signer.PublicKey(),
+            },
+            Signature: aptos.AnySignature{
+                Variant:   account.Signer.Scheme(),
+                Signature: make([]byte, 64), // Zero signature for simulation
+            },
+        },
+    },
+}
+txnBytes, _ := fakeSignedTxn.Bytes()
+
 // Simulate to estimate gas
-result, err := client.SimulateRawTransaction(ctx, account, rawTxn,
+result, err := client.SimulateTransaction(ctx, txnBytes,
     aptos.WithEstimateMaxGasAmount(),
     aptos.WithEstimateGasUnitPrice(),
 )
@@ -162,7 +177,8 @@ fmt.Println("Success:", result.Data[0].Success)
 - `GetAccountTransactions(ctx, address)` - Get account's transactions
 - `SubmitTransaction(ctx, signedTxnBytes)` - Submit signed transaction
 - `SimulateTransaction(ctx, signedTxnBytes)` - Simulate transaction
-- `WaitForTransaction(ctx, hash)` - Wait for confirmation
+- `WaitForTransactionByHash(ctx, hash)` - Wait for confirmation (long-polling)
+- `PollForTransaction(ctx, hash, interval)` - Poll for confirmation
 
 #### Blocks
 - `GetBlockByHeight(ctx, height, withTxns)` - Get block by height
@@ -181,8 +197,6 @@ fmt.Println("Success:", result.Data[0].Success)
 
 #### Transaction Building
 - `BuildTransaction(ctx, sender, payload)` - Build raw transaction
-- `BuildSignAndSubmitTransaction(ctx, account, payload)` - Build, sign, submit
-- `TransferAPT(ctx, account, recipient, amount)` - Transfer APT coins
 
 ### Request Options
 

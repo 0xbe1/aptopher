@@ -66,49 +66,6 @@ func (e EntryFunction) MarshalBCS(ser *bcs.Serializer) {
 	}
 }
 
-// APTTransferPayload creates a payload for transferring APT coins.
-func APTTransferPayload(recipient AccountAddress, amount uint64) TransactionPayload {
-	return TransactionPayload{
-		Payload: &EntryFunction{
-			Module: ModuleId{
-				Address: AccountOne,
-				Name:    "aptos_account",
-			},
-			Function: "transfer",
-			TypeArgs: nil,
-			Args: [][]byte{
-				mustSerializeAddress(recipient),
-				bcs.SerializeU64(amount),
-			},
-		},
-	}
-}
-
-// CoinTransferPayload creates a payload for transferring coins of a specific type.
-func CoinTransferPayload(coinType TypeTag, recipient AccountAddress, amount uint64) TransactionPayload {
-	return TransactionPayload{
-		Payload: &EntryFunction{
-			Module: ModuleId{
-				Address: AccountOne,
-				Name:    "aptos_account",
-			},
-			Function: "transfer_coins",
-			TypeArgs: []TypeTag{coinType},
-			Args: [][]byte{
-				mustSerializeAddress(recipient),
-				bcs.SerializeU64(amount),
-			},
-		},
-	}
-}
-
-func mustSerializeAddress(addr AccountAddress) []byte {
-	data, err := bcs.Serialize(&addr)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
 
 // Script represents a Move script.
 type Script struct {
