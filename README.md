@@ -1,4 +1,4 @@
-# lets-go-aptos
+# Let's Go Aptos
 
 A clean, simple Go SDK for the [Aptos](https://aptos.dev) blockchain.
 
@@ -303,6 +303,10 @@ This SDK has minimal dependencies:
 
 - `golang.org/x/crypto` - SHA3-256, Ed25519
 - `github.com/decred/dcrd/dcrec/secp256k1/v4` - Secp256k1 ECDSA
+
+## Acknowledgments
+
+This SDK implements the [Aptos Node API specification](https://api.mainnet.aptoslabs.com/v1/spec) and was built with [Claude](https://claude.ai), using the official [aptos-go-sdk](https://github.com/aptos-labs/aptos-go-sdk) as reference.
 
 ## License
 
