@@ -100,6 +100,7 @@ type BuildOptions struct {
 	GasUnitPrice            *uint64
 	ExpirationTimestampSecs *uint64
 	SequenceNumber          *uint64
+	ReplayProtectionNonce   *uint64 // For orderless transactions (mutually exclusive with SequenceNumber)
 }
 
 // ApplyBuildOptions applies all build options.
@@ -136,5 +137,16 @@ func WithExpirationTimestampSecs(timestamp uint64) BuildOption {
 func WithSequenceNumber(seqNum uint64) BuildOption {
 	return func(o *BuildOptions) {
 		o.SequenceNumber = &seqNum
+	}
+}
+
+// WithReplayProtectionNonce sets the replay protection nonce for orderless transactions.
+// When set, the transaction does not depend on the account's sequence number, allowing
+// multiple transactions to be signed and submitted in any order.
+// Maximum expiration time for orderless transactions is 60 seconds.
+// This option is mutually exclusive with WithSequenceNumber.
+func WithReplayProtectionNonce(nonce uint64) BuildOption {
+	return func(o *BuildOptions) {
+		o.ReplayProtectionNonce = &nonce
 	}
 }

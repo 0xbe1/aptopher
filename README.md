@@ -116,6 +116,30 @@ if txn.Data.Success {
 }
 ```
 
+### Orderless Transactions
+
+Orderless transactions use a replay protection nonce instead of a sequence number, allowing multiple transactions to be signed and submitted in any order. This is useful for multi-agent scenarios or when transaction ordering doesn't matter.
+
+```go
+import "crypto/rand"
+
+// Generate a random nonce for replay protection
+var nonceBuf [8]byte
+rand.Read(nonceBuf[:])
+nonce := binary.LittleEndian.Uint64(nonceBuf[:])
+
+// Build an orderless transaction
+rawTxn, err := client.BuildTransaction(ctx, account.Address, payload,
+    aptos.WithReplayProtectionNonce(nonce),
+)
+
+// Sign and submit as usual
+signedTxn, err := account.SignTransaction(rawTxn)
+txnBytes, err := signedTxn.Bytes()
+pending, err := client.SubmitTransaction(ctx, txnBytes)
+```
+
+**Note:** Orderless transactions have a maximum expiration time of 60 seconds.
 
 ### Simulate Transactions
 
@@ -224,6 +248,11 @@ client.BuildTransaction(ctx, sender, payload,
     aptos.WithMaxGasAmount(50000),
     aptos.WithGasUnitPrice(100),
     aptos.WithSequenceNumber(5),
+)
+
+// Orderless transaction (uses nonce instead of sequence number)
+client.BuildTransaction(ctx, sender, payload,
+    aptos.WithReplayProtectionNonce(12345),
 )
 ```
 

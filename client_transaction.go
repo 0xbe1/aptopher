@@ -9,19 +9,32 @@ import (
 
 // Default transaction parameters
 const (
-	DefaultMaxGasAmount      = uint64(200000)
-	DefaultGasUnitPrice      = uint64(100)
-	DefaultExpirationSeconds = uint64(600) // 10 minutes
+	DefaultMaxGasAmount               = uint64(200000)
+	DefaultGasUnitPrice               = uint64(100)
+	DefaultExpirationSeconds          = uint64(600) // 10 minutes
+	OrderlessMaxExpirationSeconds     = uint64(60)  // 60 seconds max for orderless transactions
+	OrderlessPlaceholderSequenceNum   = uint64(0xdeadbeef)
 )
 
 // BuildTransaction builds a raw transaction for the given sender and payload.
 // It fetches required data (sequence number, gas price, chain ID) concurrently
 // when not provided via options, reducing latency from 3 round trips to 1.
+//
+// For orderless transactions, use WithReplayProtectionNonce instead of WithSequenceNumber.
+// This allows transactions to be signed and submitted in any order.
 func (c *Client) BuildTransaction(ctx context.Context, sender AccountAddress, payload TransactionPayload, opts ...BuildOption) (*RawTransaction, error) {
 	options := ApplyBuildOptions(opts...)
 
+	// Validate mutual exclusivity
+	if options.SequenceNumber != nil && options.ReplayProtectionNonce != nil {
+		return nil, fmt.Errorf("cannot specify both SequenceNumber and ReplayProtectionNonce")
+	}
+
+	// Check if this is an orderless transaction
+	isOrderless := options.ReplayProtectionNonce != nil
+
 	// Determine what needs to be fetched
-	needSequenceNumber := options.SequenceNumber == nil
+	needSequenceNumber := options.SequenceNumber == nil && !isOrderless
 	needGasPrice := options.GasUnitPrice == nil
 	needChainID := c.chainID == 0
 
@@ -58,6 +71,8 @@ func (c *Client) BuildTransaction(ctx context.Context, sender AccountAddress, pa
 			sequenceNumber = account.Data.SequenceNumberUint64()
 			mu.Unlock()
 		}()
+	} else if isOrderless {
+		sequenceNumber = OrderlessPlaceholderSequenceNum
 	} else {
 		sequenceNumber = *options.SequenceNumber
 	}
@@ -122,19 +137,59 @@ func (c *Client) BuildTransaction(ctx context.Context, sender AccountAddress, pa
 	var expirationTimestampSecs uint64
 	if options.ExpirationTimestampSecs != nil {
 		expirationTimestampSecs = *options.ExpirationTimestampSecs
+	} else if isOrderless {
+		// Orderless transactions have a max expiration of 60 seconds
+		expirationTimestampSecs = uint64(time.Now().Unix()) + OrderlessMaxExpirationSeconds
 	} else {
 		expirationTimestampSecs = uint64(time.Now().Unix()) + DefaultExpirationSeconds
+	}
+
+	// For orderless transactions, wrap the payload in TransactionInnerPayloadV1
+	finalPayload := payload
+	if isOrderless {
+		finalPayload = wrapPayloadForOrderless(payload, options.ReplayProtectionNonce)
 	}
 
 	return &RawTransaction{
 		Sender:                  sender,
 		SequenceNumber:          sequenceNumber,
-		Payload:                 payload,
+		Payload:                 finalPayload,
 		MaxGasAmount:            maxGasAmount,
 		GasUnitPrice:            gasUnitPrice,
 		ExpirationTimestampSecs: expirationTimestampSecs,
 		ChainID:                 chainID,
 	}, nil
+}
+
+// wrapPayloadForOrderless wraps a transaction payload in TransactionInnerPayloadV1
+// with the replay protection nonce for orderless transactions.
+func wrapPayloadForOrderless(payload TransactionPayload, nonce *uint64) TransactionPayload {
+	var executable TransactionExecutable
+
+	switch p := payload.Payload.(type) {
+	case *EntryFunction:
+		executable = TransactionExecutable{
+			Variant:   TransactionExecutableEntryFunction,
+			EntryFunc: p,
+		}
+	case *Script:
+		executable = TransactionExecutable{
+			Variant: TransactionExecutableScript,
+			Script:  p,
+		}
+	default:
+		// For other payload types, wrap as-is (this shouldn't happen in practice)
+		return payload
+	}
+
+	return TransactionPayload{
+		Payload: &TransactionInnerPayloadV1{
+			Executable: executable,
+			ExtraConfig: TransactionExtraConfigV1{
+				ReplayProtectionNonce: nonce,
+			},
+		},
+	}
 }
 
 // BuildSignAndSubmitTransaction is a convenience method that builds, signs,

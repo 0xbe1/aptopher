@@ -19,6 +19,9 @@ const (
 
 	// TransactionPayloadMultisig is a multisig payload.
 	TransactionPayloadMultisig TransactionPayloadVariant = 3
+
+	// TransactionPayloadPayload wraps an inner payload (for orderless transactions).
+	TransactionPayloadPayload TransactionPayloadVariant = 4
 )
 
 // TransactionPayload wraps different payload types.
@@ -158,5 +161,80 @@ func (m MultisigPayload) MarshalBCS(ser *bcs.Serializer) {
 	} else {
 		ser.U8(1) // Some
 		m.TransactionPayload.MarshalBCS(ser)
+	}
+}
+
+// TransactionInnerPayloadV1 wraps an executable with extra config for orderless transactions.
+// This is used when replay_protection_nonce is specified instead of sequence_number.
+type TransactionInnerPayloadV1 struct {
+	Executable  TransactionExecutable
+	ExtraConfig TransactionExtraConfigV1
+}
+
+func (TransactionInnerPayloadV1) payloadVariant() TransactionPayloadVariant {
+	return TransactionPayloadPayload
+}
+
+// MarshalBCS implements bcs.Marshaler.
+// Serializes as: PayloadVariant(4) + InnerPayloadVariant(0) + Executable + ExtraConfig
+func (p TransactionInnerPayloadV1) MarshalBCS(ser *bcs.Serializer) {
+	ser.Uleb128(0) // TransactionInnerPayloadVariantV1
+	p.Executable.MarshalBCS(ser)
+	p.ExtraConfig.MarshalBCS(ser)
+}
+
+// TransactionExecutableVariant represents the type of executable.
+type TransactionExecutableVariant uint8
+
+const (
+	// TransactionExecutableScript is a script executable.
+	TransactionExecutableScript TransactionExecutableVariant = 0
+
+	// TransactionExecutableEntryFunction is an entry function executable.
+	TransactionExecutableEntryFunction TransactionExecutableVariant = 1
+)
+
+// TransactionExecutable wraps a script or entry function for inner payloads.
+type TransactionExecutable struct {
+	Variant      TransactionExecutableVariant
+	Script       *Script
+	EntryFunc    *EntryFunction
+}
+
+// MarshalBCS implements bcs.Marshaler.
+func (e TransactionExecutable) MarshalBCS(ser *bcs.Serializer) {
+	ser.Uleb128(uint32(e.Variant))
+	switch e.Variant {
+	case TransactionExecutableScript:
+		e.Script.MarshalBCS(ser)
+	case TransactionExecutableEntryFunction:
+		e.EntryFunc.MarshalBCS(ser)
+	}
+}
+
+// TransactionExtraConfigV1 contains optional extra configuration for transactions.
+type TransactionExtraConfigV1 struct {
+	MultisigAddress       *AccountAddress // Optional multisig address
+	ReplayProtectionNonce *uint64         // Optional nonce for orderless transactions
+}
+
+// MarshalBCS implements bcs.Marshaler.
+func (c TransactionExtraConfigV1) MarshalBCS(ser *bcs.Serializer) {
+	ser.Uleb128(0) // TransactionExtraConfigVariantV1
+
+	// MultisigAddress as Option<AccountAddress>
+	if c.MultisigAddress == nil {
+		ser.U8(0) // None
+	} else {
+		ser.U8(1) // Some
+		c.MultisigAddress.MarshalBCS(ser)
+	}
+
+	// ReplayProtectionNonce as Option<u64>
+	if c.ReplayProtectionNonce == nil {
+		ser.U8(0) // None
+	} else {
+		ser.U8(1) // Some
+		ser.U64(*c.ReplayProtectionNonce)
 	}
 }
