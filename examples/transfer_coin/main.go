@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -81,7 +80,7 @@ func main() {
 	amount := uint64(1000)
 	fmt.Printf("Transferring %d octas...\n", amount)
 
-	// Create the transfer payload
+	// Create the transfer payload using typed argument builders
 	payload := aptos.TransactionPayload{
 		Payload: &aptos.EntryFunction{
 			Module: aptos.ModuleId{
@@ -90,10 +89,10 @@ func main() {
 			},
 			Function: "transfer",
 			TypeArgs: nil,
-			Args: [][]byte{
-				recipient.Address[:],
-				serializeU64(amount),
-			},
+			Args: aptos.EntryFunctionArgs(
+				aptos.AddressArg(recipient.Address),
+				aptos.U64Arg(amount),
+			),
 		},
 	}
 
@@ -114,10 +113,4 @@ func main() {
 
 func bytesToHex(b [32]byte) string {
 	return "0x" + hex.EncodeToString(b[:])
-}
-
-func serializeU64(v uint64) []byte {
-	buf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buf, v)
-	return buf
 }

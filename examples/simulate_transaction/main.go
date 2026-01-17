@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"log"
 
@@ -33,7 +32,7 @@ func main() {
 
 	ctx := context.Background()
 
-	// Create a transfer payload
+	// Create a transfer payload using typed argument builders
 	payload := aptos.TransactionPayload{
 		Payload: &aptos.EntryFunction{
 			Module: aptos.ModuleId{
@@ -42,10 +41,10 @@ func main() {
 			},
 			Function: "transfer",
 			TypeArgs: nil,
-			Args: [][]byte{
-				recipient.Address[:],
-				serializeU64(1000),
-			},
+			Args: aptos.EntryFunctionArgs(
+				aptos.AddressArg(recipient.Address),
+				aptos.U64Arg(1000),
+			),
 		},
 	}
 
@@ -121,10 +120,4 @@ func main() {
 		fmt.Printf("  Prioritized: %d\n", gasEstimate.Data.PrioritizedGasEstimate)
 		fmt.Printf("  Deprioritized: %d\n", gasEstimate.Data.DeprioritizedGasEstimate)
 	}
-}
-
-func serializeU64(v uint64) []byte {
-	buf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buf, v)
-	return buf
 }
