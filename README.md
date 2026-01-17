@@ -165,9 +165,13 @@ fmt.Println("Success:", result.Data[0].Success)
 #### Accounts
 - `GetAccount(ctx, address)` - Get account info (sequence number, auth key)
 - `GetAccountResources(ctx, address)` - List all resources
+- `GetAccountResourcesBCS(ctx, address)` - List all resources (BCS format)
 - `GetAccountResource(ctx, address, resourceType)` - Get specific resource
+- `GetAccountResourceBCS(ctx, address, resourceType)` - Get specific resource (BCS format)
 - `GetAccountModules(ctx, address)` - List all modules
+- `GetAccountModulesBCS(ctx, address)` - List all modules (BCS format)
 - `GetAccountModule(ctx, address, moduleName)` - Get specific module
+- `GetAccountModuleBCS(ctx, address, moduleName)` - Get specific module (BCS format)
 - `GetAccountBalance(ctx, address, assetType)` - Get coin balance
 
 #### Transactions
@@ -190,13 +194,16 @@ fmt.Println("Success:", result.Data[0].Success)
 
 #### Tables
 - `GetTableItem(ctx, tableHandle, request)` - Get table item
+- `GetTableItemBCS(ctx, tableHandle, request)` - Get table item (BCS format)
 - `GetRawTableItem(ctx, tableHandle, request)` - Get raw table item
 
 #### View Functions
 - `View(ctx, request)` - Execute view function
+- `ViewBCS(ctx, request)` - Execute view function (BCS format)
 
 #### Transaction Building
 - `BuildTransaction(ctx, sender, payload)` - Build raw transaction
+- `BuildSignAndSubmitTransaction(ctx, account, payload)` - Build, sign, and submit in one call
 
 ### Request Options
 
@@ -254,6 +261,48 @@ if err != nil {
         fmt.Println("Error code:", apiErr.ErrorCode)
         fmt.Println("Message:", apiErr.Message)
     }
+}
+```
+
+### Typed Argument Builders
+
+Use these helpers to build BCS-encoded entry function arguments:
+
+```go
+// Primitives
+aptos.BoolArg(true)
+aptos.U8Arg(255)
+aptos.U16Arg(65535)
+aptos.U32Arg(4294967295)
+aptos.U64Arg(1000000)
+aptos.U128Arg(big.NewInt(1000000))
+aptos.U256Arg(big.NewInt(1000000))
+
+// Address and strings
+aptos.AddressArg(address)
+aptos.StringArg("hello")
+aptos.BytesArg([]byte{0x01, 0x02})
+aptos.ObjectArg(objectAddress)  // Same as AddressArg
+
+// Vectors
+aptos.VectorU8Arg([]byte{1, 2, 3})
+aptos.VectorU64Arg([]uint64{100, 200})
+aptos.VectorAddressArg([]aptos.AccountAddress{addr1, addr2})
+aptos.VectorStringArg([]string{"a", "b"})
+
+// Options (pass nil for None)
+aptos.OptionU64Arg(&value)      // Some(value)
+aptos.OptionU64Arg(nil)         // None
+aptos.OptionAddressArg(&addr)
+aptos.OptionStringArg(&str)
+
+// Combine into entry function args
+payload := aptos.TransactionPayload{
+    Payload: &aptos.EntryFunction{
+        Module:   aptos.ModuleId{Address: aptos.AccountOne, Name: "aptos_account"},
+        Function: "transfer",
+        Args:     aptos.EntryFunctionArgs(aptos.AddressArg(recipient), aptos.U64Arg(amount)),
+    },
 }
 ```
 
