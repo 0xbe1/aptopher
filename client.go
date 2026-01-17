@@ -91,6 +91,20 @@ func (c *Client) GetAccountResources(ctx context.Context, address AccountAddress
 	return Response[[]MoveResource]{Data: resources, Metadata: metadata}, nil
 }
 
+// GetAccountResourcesBCS retrieves all resources for an account as raw BCS bytes.
+// This is faster than GetAccountResources as it skips JSON parsing.
+// Use bcs.Deserializer to decode the response.
+func (c *Client) GetAccountResourcesBCS(ctx context.Context, address AccountAddress, opts ...RequestOption) (BCSResponse, error) {
+	options := ApplyOptions(opts...)
+	path := "/accounts/" + address.String() + "/resources" + options.BuildQueryParams()
+
+	data, metadata, err := c.http.getBCS(ctx, path)
+	if err != nil {
+		return BCSResponse{}, err
+	}
+	return BCSResponse{Data: data, Metadata: metadata}, nil
+}
+
 // GetAccountResource retrieves a specific resource for an account.
 func (c *Client) GetAccountResource(ctx context.Context, address AccountAddress, resourceType string, opts ...RequestOption) (Response[MoveResource], error) {
 	options := ApplyOptions(opts...)
@@ -102,6 +116,20 @@ func (c *Client) GetAccountResource(ctx context.Context, address AccountAddress,
 		return Response[MoveResource]{}, err
 	}
 	return Response[MoveResource]{Data: resource, Metadata: metadata}, nil
+}
+
+// GetAccountResourceBCS retrieves a specific resource for an account as raw BCS bytes.
+// This is faster than GetAccountResource as it skips JSON parsing.
+// Use bcs.Deserializer to decode the response.
+func (c *Client) GetAccountResourceBCS(ctx context.Context, address AccountAddress, resourceType string, opts ...RequestOption) (BCSResponse, error) {
+	options := ApplyOptions(opts...)
+	path := "/accounts/" + address.String() + "/resource/" + resourceType + options.BuildQueryParams()
+
+	data, metadata, err := c.http.getBCS(ctx, path)
+	if err != nil {
+		return BCSResponse{}, err
+	}
+	return BCSResponse{Data: data, Metadata: metadata}, nil
 }
 
 // GetAccountModules retrieves all modules for an account.
@@ -117,6 +145,20 @@ func (c *Client) GetAccountModules(ctx context.Context, address AccountAddress, 
 	return Response[[]MoveModuleBytecode]{Data: modules, Metadata: metadata}, nil
 }
 
+// GetAccountModulesBCS retrieves all modules for an account as raw BCS bytes.
+// This is faster than GetAccountModules as it skips JSON parsing.
+// Use bcs.Deserializer to decode the response.
+func (c *Client) GetAccountModulesBCS(ctx context.Context, address AccountAddress, opts ...RequestOption) (BCSResponse, error) {
+	options := ApplyOptions(opts...)
+	path := "/accounts/" + address.String() + "/modules" + options.BuildQueryParams()
+
+	data, metadata, err := c.http.getBCS(ctx, path)
+	if err != nil {
+		return BCSResponse{}, err
+	}
+	return BCSResponse{Data: data, Metadata: metadata}, nil
+}
+
 // GetAccountModule retrieves a specific module for an account.
 func (c *Client) GetAccountModule(ctx context.Context, address AccountAddress, moduleName string, opts ...RequestOption) (Response[MoveModuleBytecode], error) {
 	options := ApplyOptions(opts...)
@@ -128,6 +170,20 @@ func (c *Client) GetAccountModule(ctx context.Context, address AccountAddress, m
 		return Response[MoveModuleBytecode]{}, err
 	}
 	return Response[MoveModuleBytecode]{Data: module, Metadata: metadata}, nil
+}
+
+// GetAccountModuleBCS retrieves a specific module for an account as raw BCS bytes.
+// This is faster than GetAccountModule as it skips JSON parsing.
+// Use bcs.Deserializer to decode the response.
+func (c *Client) GetAccountModuleBCS(ctx context.Context, address AccountAddress, moduleName string, opts ...RequestOption) (BCSResponse, error) {
+	options := ApplyOptions(opts...)
+	path := "/accounts/" + address.String() + "/module/" + moduleName + options.BuildQueryParams()
+
+	data, metadata, err := c.http.getBCS(ctx, path)
+	if err != nil {
+		return BCSResponse{}, err
+	}
+	return BCSResponse{Data: data, Metadata: metadata}, nil
 }
 
 // GetAccountBalance retrieves the balance of a specific asset type for an account.

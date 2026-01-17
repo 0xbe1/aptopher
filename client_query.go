@@ -144,6 +144,20 @@ func (c *Client) GetTableItem(ctx context.Context, tableHandle string, req Table
 	return Response[json.RawMessage]{Data: result, Metadata: metadata}, nil
 }
 
+// GetTableItemBCS retrieves a table item as raw BCS bytes.
+// This is faster than GetTableItem as it skips JSON parsing.
+// Use bcs.Deserializer to decode the response.
+func (c *Client) GetTableItemBCS(ctx context.Context, tableHandle string, req TableItemRequest, opts ...RequestOption) (BCSResponse, error) {
+	options := ApplyOptions(opts...)
+	path := "/tables/" + tableHandle + "/item" + options.BuildQueryParams()
+
+	data, metadata, err := c.http.postJSONGetBCS(ctx, path, req)
+	if err != nil {
+		return BCSResponse{}, err
+	}
+	return BCSResponse{Data: data, Metadata: metadata}, nil
+}
+
 // GetRawTableItem retrieves a raw table item.
 func (c *Client) GetRawTableItem(ctx context.Context, tableHandle string, req RawTableItemRequest, opts ...RequestOption) (Response[json.RawMessage], error) {
 	options := ApplyOptions(opts...)
@@ -168,6 +182,20 @@ func (c *Client) View(ctx context.Context, req ViewRequest, opts ...RequestOptio
 		return Response[[]json.RawMessage]{}, err
 	}
 	return Response[[]json.RawMessage]{Data: result, Metadata: metadata}, nil
+}
+
+// ViewBCS executes a view function and returns the result as raw BCS bytes.
+// This is faster than View as it skips JSON parsing.
+// Use bcs.Deserializer to decode the response.
+func (c *Client) ViewBCS(ctx context.Context, req ViewRequest, opts ...RequestOption) (BCSResponse, error) {
+	options := ApplyOptions(opts...)
+	path := "/view" + options.BuildQueryParams()
+
+	data, metadata, err := c.http.postJSONGetBCS(ctx, path, req)
+	if err != nil {
+		return BCSResponse{}, err
+	}
+	return BCSResponse{Data: data, Metadata: metadata}, nil
 }
 
 // SimulateTransaction simulates a transaction without committing it.

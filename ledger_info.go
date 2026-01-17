@@ -31,6 +31,12 @@ type Response[T any] struct {
 	Metadata ResponseMetadata
 }
 
+// BCSResponse wraps raw BCS bytes with response metadata.
+type BCSResponse struct {
+	Data     []byte
+	Metadata ResponseMetadata
+}
+
 // NodeInfo contains basic information about a node.
 type NodeInfo struct {
 	ChainID             uint8  `json:"chain_id"`
