@@ -137,3 +137,47 @@ func (c *Client) BuildTransaction(ctx context.Context, sender AccountAddress, pa
 	}, nil
 }
 
+// BuildSignAndSubmitTransaction is a convenience method that builds, signs,
+// submits a transaction, and waits for it to be committed.
+//
+// This combines the following steps into a single call:
+//  1. BuildTransaction - fetch sequence number, gas price, chain ID
+//  2. SignTransaction - sign with the account's private key
+//  3. SubmitTransaction - submit to the network
+//  4. WaitForTransactionByHash - wait for confirmation
+//
+// Returns the committed transaction or an error if any step fails.
+func (c *Client) BuildSignAndSubmitTransaction(
+	ctx context.Context,
+	account *Account,
+	payload TransactionPayload,
+	opts ...BuildOption,
+) (Response[Transaction], error) {
+	// Build the transaction
+	rawTxn, err := c.BuildTransaction(ctx, account.Address, payload, opts...)
+	if err != nil {
+		return Response[Transaction]{}, fmt.Errorf("build transaction: %w", err)
+	}
+
+	// Sign the transaction
+	signedTxn, err := account.SignTransaction(rawTxn)
+	if err != nil {
+		return Response[Transaction]{}, fmt.Errorf("sign transaction: %w", err)
+	}
+
+	// Serialize to BCS
+	txnBytes, err := signedTxn.Bytes()
+	if err != nil {
+		return Response[Transaction]{}, fmt.Errorf("serialize transaction: %w", err)
+	}
+
+	// Submit to network
+	pending, err := c.SubmitTransaction(ctx, txnBytes)
+	if err != nil {
+		return Response[Transaction]{}, fmt.Errorf("submit transaction: %w", err)
+	}
+
+	// Wait for confirmation
+	return c.WaitForTransactionByHash(ctx, pending.Data.Hash)
+}
+

@@ -91,43 +91,17 @@ func main() {
 			Function: "transfer",
 			TypeArgs: nil,
 			Args: [][]byte{
-				mustSerializeAddress(recipient.Address),
+				recipient.Address[:],
 				serializeU64(amount),
 			},
 		},
 	}
 
-	// Build the transaction
-	rawTxn, err := client.BuildTransaction(ctx, account.Address, payload)
+	// Build, sign, submit, and wait for the transaction in one call
+	fmt.Println("Submitting transaction...")
+	txn, err := client.BuildSignAndSubmitTransaction(ctx, account, payload)
 	if err != nil {
-		log.Fatalf("Failed to build transaction: %v", err)
-	}
-
-	// Sign the transaction
-	signedTxn, err := account.SignTransaction(rawTxn)
-	if err != nil {
-		log.Fatalf("Failed to sign transaction: %v", err)
-	}
-
-	// Get signed transaction bytes
-	txnBytes, err := signedTxn.Bytes()
-	if err != nil {
-		log.Fatalf("Failed to serialize transaction: %v", err)
-	}
-
-	// Submit the transaction
-	pending, err := client.SubmitTransaction(ctx, txnBytes)
-	if err != nil {
-		log.Fatalf("Failed to submit transaction: %v", err)
-	}
-
-	fmt.Printf("Transaction submitted: %s\n", pending.Data.Hash)
-
-	// Wait for transaction to be committed
-	fmt.Println("Waiting for transaction...")
-	txn, err := client.WaitForTransactionByHash(ctx, pending.Data.Hash)
-	if err != nil {
-		log.Fatalf("Failed waiting for transaction: %v", err)
+		log.Fatalf("Transaction failed: %v", err)
 	}
 
 	if txn.Data.Success {
@@ -140,10 +114,6 @@ func main() {
 
 func bytesToHex(b [32]byte) string {
 	return "0x" + hex.EncodeToString(b[:])
-}
-
-func mustSerializeAddress(addr aptos.AccountAddress) []byte {
-	return addr[:]
 }
 
 func serializeU64(v uint64) []byte {
