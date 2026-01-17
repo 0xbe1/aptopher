@@ -1,7 +1,7 @@
 package aptos
 
 import (
-	"github.com/0xbe1/lets-go-aptos/bcs"
+	"github.com/0xbe1/aptopher/bcs"
 )
 
 // TransactionPayloadVariant represents the type of transaction payload.

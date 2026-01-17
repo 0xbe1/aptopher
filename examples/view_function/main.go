@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	aptos "github.com/0xbe1/lets-go-aptos"
+	aptos "github.com/0xbe1/aptopher"
 )
 
 func main() {

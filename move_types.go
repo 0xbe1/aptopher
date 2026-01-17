@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/0xbe1/lets-go-aptos/bcs"
+	"github.com/0xbe1/aptopher/bcs"
 )
 
 // U128 represents a 128-bit unsigned integer.

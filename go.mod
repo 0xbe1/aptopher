@@ -1,4 +1,4 @@
-module github.com/0xbe1/lets-go-aptos
+module github.com/0xbe1/aptopher
 
 go 1.24.0
 

@@ -1,7 +1,7 @@
 package aptos
 
 import (
-	"github.com/0xbe1/lets-go-aptos/crypto"
+	"github.com/0xbe1/aptopher/crypto"
 )
 
 // Account represents an Aptos account with signing capabilities.

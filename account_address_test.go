@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/0xbe1/lets-go-aptos/bcs"
+	"github.com/0xbe1/aptopher/bcs"
 )
 
 func TestParseAccountAddress(t *testing.T) {

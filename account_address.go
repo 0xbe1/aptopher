@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/0xbe1/lets-go-aptos/bcs"
-	"github.com/0xbe1/lets-go-aptos/internal/hex"
+	"github.com/0xbe1/aptopher/bcs"
+	"github.com/0xbe1/aptopher/internal/hex"
 )
 
 const (

@@ -1,4 +1,4 @@
-# Let's Go Aptos
+# Aptopher
 
 A clean, simple Go SDK for the [Aptos](https://aptos.dev) blockchain.
 
@@ -14,7 +14,7 @@ A clean, simple Go SDK for the [Aptos](https://aptos.dev) blockchain.
 ## Installation
 
 ```bash
-go get github.com/0xbe1/lets-go-aptos
+go get github.com/0xbe1/aptopher
 ```
 
 Requires Go 1.21 or later.
@@ -24,7 +24,7 @@ Requires Go 1.21 or later.
 ### Connect to a Network
 
 ```go
-import aptos "github.com/0xbe1/lets-go-aptos"
+import aptos "github.com/0xbe1/aptopher"
 
 // Mainnet
 client, err := aptos.NewClient(aptos.MainnetConfig)
@@ -275,7 +275,7 @@ go run ./examples/query_account
 ## Package Structure
 
 ```
-github.com/0xbe1/lets-go-aptos/
+github.com/0xbe1/aptopher/
 ├── bcs/                    # Binary Canonical Serialization
 │   ├── serializer.go       # BCS encoding
 │   ├── deserializer.go     # BCS decoding
