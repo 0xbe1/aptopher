@@ -1,4 +1,4 @@
-.PHONY: release-patch release-minor release-major tag-patch tag-minor tag-major current-version help
+.PHONY: release-patch release-minor release-major current-version help
 
 # Get the latest version tag, default to v0.0.0 if none exists
 CURRENT_VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
@@ -26,29 +26,23 @@ help:
 current-version:
 	@echo $(CURRENT_VERSION)
 
-tag-patch:
-	@echo "Creating tag $(NEXT_PATCH)..."
-	git tag -a $(NEXT_PATCH) -m "Release $(NEXT_PATCH)"
-
-tag-minor:
-	@echo "Creating tag $(NEXT_MINOR)..."
-	git tag -a $(NEXT_MINOR) -m "Release $(NEXT_MINOR)"
-
-tag-major:
-	@echo "Creating tag $(NEXT_MAJOR)..."
-	git tag -a $(NEXT_MAJOR) -m "Release $(NEXT_MAJOR)"
-
-release-patch: tag-patch
-	@echo "Pushing $(NEXT_PATCH) to origin..."
+release-patch:
+	@echo "Releasing $(NEXT_PATCH)..."
+	git tag $(NEXT_PATCH)
 	git push origin $(NEXT_PATCH)
+	gh release create $(NEXT_PATCH) --generate-notes --edit
 	@echo "Released $(NEXT_PATCH)"
 
-release-minor: tag-minor
-	@echo "Pushing $(NEXT_MINOR) to origin..."
+release-minor:
+	@echo "Releasing $(NEXT_MINOR)..."
+	git tag $(NEXT_MINOR)
 	git push origin $(NEXT_MINOR)
+	gh release create $(NEXT_MINOR) --generate-notes --edit
 	@echo "Released $(NEXT_MINOR)"
 
-release-major: tag-major
-	@echo "Pushing $(NEXT_MAJOR) to origin..."
+release-major:
+	@echo "Releasing $(NEXT_MAJOR)..."
+	git tag $(NEXT_MAJOR)
 	git push origin $(NEXT_MAJOR)
+	gh release create $(NEXT_MAJOR) --generate-notes --edit
 	@echo "Released $(NEXT_MAJOR)"
