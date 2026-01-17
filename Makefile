@@ -28,21 +28,12 @@ current-version:
 
 release-patch:
 	@echo "Releasing $(NEXT_PATCH)..."
-	git tag $(NEXT_PATCH)
-	git push origin $(NEXT_PATCH)
-	gh release create $(NEXT_PATCH) --generate-notes --edit
-	@echo "Released $(NEXT_PATCH)"
+	git tag $(NEXT_PATCH) && git push origin $(NEXT_PATCH)
 
 release-minor:
 	@echo "Releasing $(NEXT_MINOR)..."
-	git tag $(NEXT_MINOR)
-	git push origin $(NEXT_MINOR)
-	gh release create $(NEXT_MINOR) --generate-notes --edit
-	@echo "Released $(NEXT_MINOR)"
+	git tag $(NEXT_MINOR) && git push origin $(NEXT_MINOR)
 
 release-major:
 	@echo "Releasing $(NEXT_MAJOR)..."
-	git tag $(NEXT_MAJOR)
-	git push origin $(NEXT_MAJOR)
-	gh release create $(NEXT_MAJOR) --generate-notes --edit
-	@echo "Released $(NEXT_MAJOR)"
+	git tag $(NEXT_MAJOR) && git push origin $(NEXT_MAJOR)
