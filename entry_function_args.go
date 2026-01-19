@@ -58,8 +58,7 @@ func U128Arg(v *big.Int) EntryFunctionArg {
 	ser := bcs.AcquireSerializer()
 	ser.U128(v)
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -69,8 +68,7 @@ func U256Arg(v *big.Int) EntryFunctionArg {
 	ser := bcs.AcquireSerializer()
 	ser.U256(v)
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -85,8 +83,7 @@ func StringArg(v string) EntryFunctionArg {
 	ser := bcs.AcquireSerializer()
 	ser.String(v)
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -96,8 +93,7 @@ func BytesArg(v []byte) EntryFunctionArg {
 	ser := bcs.AcquireSerializer()
 	ser.Bytes(v)
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -115,8 +111,7 @@ func VectorU64Arg(values []uint64) EntryFunctionArg {
 		ser.U64(v)
 	}
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -129,8 +124,7 @@ func VectorAddressArg(addrs []AccountAddress) EntryFunctionArg {
 		ser.FixedBytes(addr[:])
 	}
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -143,8 +137,7 @@ func VectorStringArg(values []string) EntryFunctionArg {
 		ser.String(v)
 	}
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -160,8 +153,7 @@ func OptionU64Arg(v *uint64) EntryFunctionArg {
 		ser.U64(*v)
 	}
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -177,8 +169,7 @@ func OptionAddressArg(addr *AccountAddress) EntryFunctionArg {
 		ser.FixedBytes(addr[:])
 	}
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }
@@ -194,8 +185,7 @@ func OptionStringArg(v *string) EntryFunctionArg {
 		ser.String(*v)
 	}
 	// Must copy since we're releasing the serializer
-	result := make([]byte, len(ser.ToBytes()))
-	copy(result, ser.ToBytes())
+	result := append([]byte(nil), ser.ToBytes()...)
 	bcs.ReleaseSerializer(ser)
 	return result
 }

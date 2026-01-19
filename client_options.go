@@ -48,20 +48,33 @@ func WithLimit(limit uint16) RequestOption {
 
 // BuildQueryParams builds query parameters from request options.
 func (o *RequestOptions) BuildQueryParams() string {
-	var params []string
-	if o.LedgerVersion != nil {
-		params = append(params, "ledger_version="+formatUint64(*o.LedgerVersion))
-	}
-	if o.Start != nil {
-		params = append(params, "start="+formatUint64(*o.Start))
-	}
-	if o.Limit != nil {
-		params = append(params, "limit="+formatUint16(*o.Limit))
-	}
-	if len(params) == 0 {
+	if o.LedgerVersion == nil && o.Start == nil && o.Limit == nil {
 		return ""
 	}
-	return "?" + strings.Join(params, "&")
+	var b strings.Builder
+	b.WriteByte('?')
+	first := true
+	if o.LedgerVersion != nil {
+		b.WriteString("ledger_version=")
+		b.WriteString(formatUint64(*o.LedgerVersion))
+		first = false
+	}
+	if o.Start != nil {
+		if !first {
+			b.WriteByte('&')
+		}
+		b.WriteString("start=")
+		b.WriteString(formatUint64(*o.Start))
+		first = false
+	}
+	if o.Limit != nil {
+		if !first {
+			b.WriteByte('&')
+		}
+		b.WriteString("limit=")
+		b.WriteString(formatUint16(*o.Limit))
+	}
+	return b.String()
 }
 
 func formatUint64(v uint64) string {

@@ -1,5 +1,7 @@
 package aptos
 
+import "strconv"
+
 // AccountData contains basic account information.
 type AccountData struct {
 	SequenceNumber    string `json:"sequence_number"`
@@ -12,11 +14,6 @@ func (a *AccountData) SequenceNumberUint64() uint64 {
 }
 
 func parseStringToUint64(s string) uint64 {
-	var result uint64
-	for _, c := range s {
-		if c >= '0' && c <= '9' {
-			result = result*10 + uint64(c-'0')
-		}
-	}
-	return result
+	v, _ := strconv.ParseUint(s, 10, 64)
+	return v
 }
