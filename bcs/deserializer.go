@@ -4,7 +4,30 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	"sync"
 )
+
+// deserializerPool provides pooled Deserializer instances to reduce allocations.
+var deserializerPool = sync.Pool{
+	New: func() interface{} { return &Deserializer{} },
+}
+
+// AcquireDeserializer returns a Deserializer from the pool, initialized with the given data.
+// Call ReleaseDeserializer when done to return it to the pool.
+func AcquireDeserializer(data []byte) *Deserializer {
+	d := deserializerPool.Get().(*Deserializer)
+	d.data = data
+	d.offset = 0
+	d.err = nil
+	return d
+}
+
+// ReleaseDeserializer returns a Deserializer to the pool.
+// Do not use the Deserializer after releasing it.
+func ReleaseDeserializer(d *Deserializer) {
+	d.data = nil // Allow GC
+	deserializerPool.Put(d)
+}
 
 // Deserializer provides BCS deserialization capabilities.
 type Deserializer struct {
@@ -110,15 +133,14 @@ func (d *Deserializer) U128() *big.Int {
 	if !d.checkRemaining(16) {
 		return nil
 	}
-	// Read 16 bytes in little-endian and convert to big.Int
-	bytes := make([]byte, 16)
-	copy(bytes, d.data[d.offset:d.offset+16])
-	d.offset += 16
-	// Reverse to big-endian for big.Int
-	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
-		bytes[i], bytes[j] = bytes[j], bytes[i]
+	// Use stack array instead of allocating slice
+	var buf [16]byte
+	// Copy and reverse in one pass (little-endian to big-endian)
+	for i := 0; i < 16; i++ {
+		buf[15-i] = d.data[d.offset+i]
 	}
-	return new(big.Int).SetBytes(bytes)
+	d.offset += 16
+	return new(big.Int).SetBytes(buf[:])
 }
 
 // U256 deserializes a 256-bit unsigned integer in little-endian format.
@@ -126,15 +148,14 @@ func (d *Deserializer) U256() *big.Int {
 	if !d.checkRemaining(32) {
 		return nil
 	}
-	// Read 32 bytes in little-endian and convert to big.Int
-	bytes := make([]byte, 32)
-	copy(bytes, d.data[d.offset:d.offset+32])
-	d.offset += 32
-	// Reverse to big-endian for big.Int
-	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
-		bytes[i], bytes[j] = bytes[j], bytes[i]
+	// Use stack array instead of allocating slice
+	var buf [32]byte
+	// Copy and reverse in one pass (little-endian to big-endian)
+	for i := 0; i < 32; i++ {
+		buf[31-i] = d.data[d.offset+i]
 	}
-	return new(big.Int).SetBytes(bytes)
+	d.offset += 32
+	return new(big.Int).SetBytes(buf[:])
 }
 
 // Uleb128 deserializes an unsigned integer using ULEB128 variable-length encoding.

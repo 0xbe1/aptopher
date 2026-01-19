@@ -3,13 +3,22 @@ package aptos
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 )
+
+// gasPriceCacheTTL is the time-to-live for cached gas price estimates.
+const gasPriceCacheTTL = 10 * time.Second
 
 // Client is the main Aptos SDK client.
 type Client struct {
 	http    *httpClient
 	chainID uint8
+
+	// Gas price cache
+	gasPriceMu       sync.RWMutex
+	cachedGasPrice   uint64
+	gasPriceCachedAt time.Time
 }
 
 // NewClient creates a new Aptos client with the given configuration.

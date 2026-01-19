@@ -1,5 +1,10 @@
 package aptos
 
+import (
+	"strconv"
+	"strings"
+)
+
 // RequestOptions contains options for API requests.
 type RequestOptions struct {
 	LedgerVersion *uint64
@@ -56,39 +61,15 @@ func (o *RequestOptions) BuildQueryParams() string {
 	if len(params) == 0 {
 		return ""
 	}
-	return "?" + joinStrings(params, "&")
+	return "?" + strings.Join(params, "&")
 }
 
 func formatUint64(v uint64) string {
-	return formatUint(uint64(v))
+	return strconv.FormatUint(v, 10)
 }
 
 func formatUint16(v uint16) string {
-	return formatUint(uint64(v))
-}
-
-func formatUint(v uint64) string {
-	// Simple integer to string conversion
-	if v == 0 {
-		return "0"
-	}
-	var digits []byte
-	for v > 0 {
-		digits = append([]byte{byte('0' + v%10)}, digits...)
-		v /= 10
-	}
-	return string(digits)
-}
-
-func joinStrings(strs []string, sep string) string {
-	if len(strs) == 0 {
-		return ""
-	}
-	result := strs[0]
-	for _, s := range strs[1:] {
-		result += sep + s
-	}
-	return result
+	return strconv.FormatUint(uint64(v), 10)
 }
 
 // BuildOption is a function that modifies transaction build options.

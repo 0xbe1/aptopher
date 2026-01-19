@@ -295,3 +295,103 @@ func TestDeserializerErrors(t *testing.T) {
 		}
 	})
 }
+
+// Benchmarks
+
+func BenchmarkSerializerU64(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		s := NewSerializer()
+		s.U64(0x123456789abcdef0)
+		_ = s.ToBytes()
+	}
+}
+
+func BenchmarkSerializerU128(b *testing.B) {
+	v, _ := new(big.Int).SetString("340282366920938463463374607431768211455", 10)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		s := NewSerializer()
+		s.U128(v)
+		_ = s.ToBytes()
+	}
+}
+
+func BenchmarkSerializerString(b *testing.B) {
+	str := "hello world"
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		s := NewSerializer()
+		s.String(str)
+		_ = s.ToBytes()
+	}
+}
+
+func BenchmarkSerializerUleb128(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		s := NewSerializer()
+		s.Uleb128(16384)
+		_ = s.ToBytes()
+	}
+}
+
+func BenchmarkSerializerUleb128Small(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		s := NewSerializer()
+		s.Uleb128(100)
+		_ = s.ToBytes()
+	}
+}
+
+func BenchmarkDeserializerU64(b *testing.B) {
+	data := []byte{0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := NewDeserializer(data)
+		_ = d.U64()
+	}
+}
+
+func BenchmarkDeserializerU128(b *testing.B) {
+	// Serialize a U128 value first
+	v, _ := new(big.Int).SetString("340282366920938463463374607431768211455", 10)
+	s := NewSerializer()
+	s.U128(v)
+	data := s.ToBytes()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := NewDeserializer(data)
+		_ = d.U128()
+	}
+}
+
+func BenchmarkDeserializerU256(b *testing.B) {
+	// Serialize a U256 value first
+	v, _ := new(big.Int).SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
+	s := NewSerializer()
+	s.U256(v)
+	data := s.ToBytes()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := NewDeserializer(data)
+		_ = d.U256()
+	}
+}
+
+func BenchmarkAcquireReleaseSerializer(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		s := AcquireSerializer()
+		s.U64(0x123456789abcdef0)
+		_ = s.ToBytes()
+		ReleaseSerializer(s)
+	}
+}
+
+func BenchmarkAcquireReleaseDeserializer(b *testing.B) {
+	data := []byte{0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := AcquireDeserializer(data)
+		_ = d.U64()
+		ReleaseDeserializer(d)
+	}
+}

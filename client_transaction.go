@@ -77,7 +77,17 @@ func (c *Client) BuildTransaction(ctx context.Context, sender AccountAddress, pa
 		sequenceNumber = *options.SequenceNumber
 	}
 
-	// Fetch gas price
+	// Fetch gas price (with cache)
+	if needGasPrice {
+		// Check cache first
+		c.gasPriceMu.RLock()
+		if time.Since(c.gasPriceCachedAt) < gasPriceCacheTTL && c.cachedGasPrice > 0 {
+			gasUnitPrice = c.cachedGasPrice
+			needGasPrice = false
+		}
+		c.gasPriceMu.RUnlock()
+	}
+
 	if needGasPrice {
 		wg.Add(1)
 		go func() {
@@ -89,10 +99,15 @@ func (c *Client) BuildTransaction(ctx context.Context, sender AccountAddress, pa
 				gasUnitPrice = DefaultGasUnitPrice
 			} else {
 				gasUnitPrice = gasEstimate.Data.GasEstimate
+				// Update cache
+				c.gasPriceMu.Lock()
+				c.cachedGasPrice = gasUnitPrice
+				c.gasPriceCachedAt = time.Now()
+				c.gasPriceMu.Unlock()
 			}
 			mu.Unlock()
 		}()
-	} else {
+	} else if options.GasUnitPrice != nil {
 		gasUnitPrice = *options.GasUnitPrice
 	}
 

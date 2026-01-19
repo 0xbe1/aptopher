@@ -55,16 +55,24 @@ func U64Arg(v uint64) EntryFunctionArg {
 
 // U128Arg creates a BCS-encoded u128 argument.
 func U128Arg(v *big.Int) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	ser.U128(v)
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // U256Arg creates a BCS-encoded u256 argument.
 func U256Arg(v *big.Int) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	ser.U256(v)
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // AddressArg creates a BCS-encoded address argument.
@@ -74,16 +82,24 @@ func AddressArg(addr AccountAddress) EntryFunctionArg {
 
 // StringArg creates a BCS-encoded string argument.
 func StringArg(v string) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	ser.String(v)
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // BytesArg creates a BCS-encoded vector<u8> argument.
 func BytesArg(v []byte) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	ser.Bytes(v)
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // VectorU8Arg is an alias for BytesArg.
@@ -93,71 +109,95 @@ func VectorU8Arg(v []byte) EntryFunctionArg {
 
 // VectorU64Arg creates a BCS-encoded vector<u64> argument.
 func VectorU64Arg(values []uint64) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	ser.Uleb128(uint32(len(values)))
 	for _, v := range values {
 		ser.U64(v)
 	}
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // VectorAddressArg creates a BCS-encoded vector<address> argument.
 func VectorAddressArg(addrs []AccountAddress) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	ser.Uleb128(uint32(len(addrs)))
 	for _, addr := range addrs {
 		ser.FixedBytes(addr[:])
 	}
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // VectorStringArg creates a BCS-encoded vector<string> argument.
 func VectorStringArg(values []string) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	ser.Uleb128(uint32(len(values)))
 	for _, v := range values {
 		ser.String(v)
 	}
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // OptionU64Arg creates a BCS-encoded Option<u64> argument.
 // Pass nil for None, or a pointer to a value for Some.
 func OptionU64Arg(v *uint64) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	if v == nil {
 		ser.U8(0) // None
 	} else {
 		ser.U8(1) // Some
 		ser.U64(*v)
 	}
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // OptionAddressArg creates a BCS-encoded Option<address> argument.
 // Pass nil for None, or a pointer to an address for Some.
 func OptionAddressArg(addr *AccountAddress) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	if addr == nil {
 		ser.U8(0) // None
 	} else {
 		ser.U8(1) // Some
 		ser.FixedBytes(addr[:])
 	}
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // OptionStringArg creates a BCS-encoded Option<String> argument.
 // Pass nil for None, or a pointer to a string for Some.
 func OptionStringArg(v *string) EntryFunctionArg {
-	ser := bcs.NewSerializer()
+	ser := bcs.AcquireSerializer()
 	if v == nil {
 		ser.U8(0) // None
 	} else {
 		ser.U8(1) // Some
 		ser.String(*v)
 	}
-	return ser.ToBytes()
+	// Must copy since we're releasing the serializer
+	result := make([]byte, len(ser.ToBytes()))
+	copy(result, ser.ToBytes())
+	bcs.ReleaseSerializer(ser)
+	return result
 }
 
 // ObjectArg creates a BCS-encoded Object<T> argument (same as address).

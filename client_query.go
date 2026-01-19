@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -214,7 +215,7 @@ func (c *Client) SimulateTransaction(ctx context.Context, signedTxnBytes []byte,
 		params = append(params, "estimate_prioritized_gas_unit_price=true")
 	}
 	if len(params) > 0 {
-		path += "?" + joinStrings(params, "&")
+		path += "?" + strings.Join(params, "&")
 	}
 
 	var result []UserTransaction

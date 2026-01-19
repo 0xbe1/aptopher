@@ -5,7 +5,28 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	"sync"
 )
+
+// serializerPool provides pooled Serializer instances to reduce allocations.
+var serializerPool = sync.Pool{
+	New: func() interface{} { return &Serializer{} },
+}
+
+// AcquireSerializer returns a Serializer from the pool.
+// Call ReleaseSerializer when done to return it to the pool.
+func AcquireSerializer() *Serializer {
+	s := serializerPool.Get().(*Serializer)
+	s.buf.Reset()
+	s.err = nil
+	return s
+}
+
+// ReleaseSerializer returns a Serializer to the pool.
+// Do not use the Serializer after releasing it.
+func ReleaseSerializer(s *Serializer) {
+	serializerPool.Put(s)
+}
 
 // Serializer provides BCS serialization capabilities.
 // It uses a streaming interface to minimize allocations.
@@ -150,6 +171,12 @@ func (s *Serializer) Uleb128(v uint32) {
 	if s.err != nil {
 		return
 	}
+	// Fast path: single byte for values < 128 (most common case)
+	if v < 128 {
+		s.buf.WriteByte(byte(v))
+		return
+	}
+	// Slow path for larger values
 	for {
 		b := byte(v & 0x7f)
 		v >>= 7
