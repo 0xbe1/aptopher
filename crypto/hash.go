@@ -27,10 +27,12 @@ func sha3256Prefix(s string) []byte {
 }
 
 // HashWithPrefix computes SHA3-256(prefix || message).
+// Uses incremental hashing to avoid allocating a concatenation buffer.
 func HashWithPrefix(prefix, message []byte) []byte {
-	data := make([]byte, len(prefix)+len(message))
-	copy(data, prefix)
-	copy(data[len(prefix):], message)
-	hash := sha3.Sum256(data)
-	return hash[:]
+	h := sha3.New256()
+	h.Write(prefix)
+	h.Write(message)
+	var result [32]byte
+	h.Sum(result[:0])
+	return result[:]
 }
