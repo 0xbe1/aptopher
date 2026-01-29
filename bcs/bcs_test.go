@@ -209,6 +209,23 @@ func TestFixedBytes(t *testing.T) {
 	}
 }
 
+func TestFixedBytesNoCopy(t *testing.T) {
+	value := []byte{0x01, 0x02, 0x03, 0x04}
+	d := NewDeserializer(value)
+	got := d.FixedBytesNoCopy(4)
+	if !bytes.Equal(got, value) {
+		t.Errorf("FixedBytesNoCopy = %v, want %v", got, value)
+	}
+	if d.Remaining() != 0 {
+		t.Errorf("FixedBytesNoCopy should consume all bytes, remaining: %d", d.Remaining())
+	}
+	// Verify it's actually a slice of the original (shares underlying array)
+	got[0] = 0xff
+	if value[0] != 0xff {
+		t.Error("FixedBytesNoCopy should return slice of original data")
+	}
+}
+
 func TestU128(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -393,5 +410,23 @@ func BenchmarkAcquireReleaseDeserializer(b *testing.B) {
 		d := AcquireDeserializer(data)
 		_ = d.U64()
 		ReleaseDeserializer(d)
+	}
+}
+
+func BenchmarkFixedBytes(b *testing.B) {
+	data := make([]byte, 32) // AccountAddress size
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := NewDeserializer(data)
+		_ = d.FixedBytes(32)
+	}
+}
+
+func BenchmarkFixedBytesNoCopy(b *testing.B) {
+	data := make([]byte, 32) // AccountAddress size
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := NewDeserializer(data)
+		_ = d.FixedBytesNoCopy(32)
 	}
 }

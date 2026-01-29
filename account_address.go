@@ -115,7 +115,8 @@ func (a AccountAddress) MarshalBCS(ser *bcs.Serializer) {
 
 // UnmarshalBCS implements bcs.Unmarshaler.
 func (a *AccountAddress) UnmarshalBCS(des *bcs.Deserializer) {
-	data := des.FixedBytes(AccountAddressLength)
+	// Use zero-copy since we immediately copy into the fixed array
+	data := des.FixedBytesNoCopy(AccountAddressLength)
 	if des.Error() != nil {
 		return
 	}

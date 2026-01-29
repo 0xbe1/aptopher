@@ -8,9 +8,16 @@ import (
 	"sync"
 )
 
+// defaultBufferCapacity is the default initial buffer size to avoid early reallocations.
+const defaultBufferCapacity = 256
+
 // serializerPool provides pooled Serializer instances to reduce allocations.
 var serializerPool = sync.Pool{
-	New: func() interface{} { return &Serializer{} },
+	New: func() interface{} {
+		s := &Serializer{}
+		s.buf.Grow(defaultBufferCapacity)
+		return s
+	},
 }
 
 // AcquireSerializer returns a Serializer from the pool.
@@ -36,6 +43,7 @@ type Serializer struct {
 }
 
 // NewSerializer creates a new BCS serializer.
+// For high-throughput scenarios, use AcquireSerializer/ReleaseSerializer instead.
 func NewSerializer() *Serializer {
 	return &Serializer{}
 }

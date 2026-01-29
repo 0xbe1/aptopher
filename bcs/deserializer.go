@@ -210,6 +210,19 @@ func (d *Deserializer) FixedBytes(length int) []byte {
 	return result
 }
 
+// FixedBytesNoCopy returns a slice of the internal buffer without copying.
+// WARNING: Do not modify the returned slice. Do not use it after the
+// Deserializer is released back to the pool or the underlying data is modified.
+// Use this only in performance-critical paths where the data is immediately consumed.
+func (d *Deserializer) FixedBytesNoCopy(length int) []byte {
+	if !d.checkRemaining(length) {
+		return nil
+	}
+	result := d.data[d.offset : d.offset+length]
+	d.offset += length
+	return result
+}
+
 // String deserializes a UTF-8 string with a ULEB128 length prefix.
 func (d *Deserializer) String() string {
 	return string(d.Bytes())
