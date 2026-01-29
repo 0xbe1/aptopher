@@ -21,6 +21,9 @@ var RawTransactionHashPrefix = sha3256Prefix("APTOS::RawTransaction")
 // RawTransactionWithDataHashPrefix is the prefix for transactions with additional data.
 var RawTransactionWithDataHashPrefix = sha3256Prefix("APTOS::RawTransactionWithData")
 
+// TransactionHashPrefix is the prefix for computing signed transaction hashes.
+var TransactionHashPrefix = sha3256Prefix("APTOS::Transaction")
+
 func sha3256Prefix(s string) []byte {
 	hash := sha3.Sum256([]byte(s))
 	return hash[:]

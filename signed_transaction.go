@@ -1,6 +1,8 @@
 package aptos
 
 import (
+	"golang.org/x/crypto/sha3"
+
 	"github.com/0xbe1/aptopher/bcs"
 	"github.com/0xbe1/aptopher/crypto"
 )
@@ -23,23 +25,21 @@ func (t *SignedTransaction) Bytes() ([]byte, error) {
 }
 
 // Hash returns the transaction hash.
+// Computes SHA3-256(prefix_hash || variant || signed_txn_bytes) where variant=0 for user transactions.
 func (t *SignedTransaction) Hash() (string, error) {
 	txnBytes, err := t.Bytes()
 	if err != nil {
 		return "", err
 	}
 
-	// Transaction hash prefix
-	prefixHash := crypto.Sha3256([]byte("APTOS::Transaction"))
+	// Use incremental hashing to avoid intermediate allocation
+	h := sha3.New256()
+	h.Write(crypto.TransactionHashPrefix)
+	h.Write([]byte{0}) // User transaction variant
+	h.Write(txnBytes)
 
-	// Compute: SHA3-256(prefix_hash || variant || signed_txn_bytes)
-	// For user transactions, variant is 0
-	data := make([]byte, 0, 33+len(txnBytes))
-	data = append(data, prefixHash[:]...)
-	data = append(data, 0) // User transaction variant
-	data = append(data, txnBytes...)
-
-	hash := crypto.Sha3256(data)
+	var hash [32]byte
+	h.Sum(hash[:0])
 	return bytesToHex(hash[:]), nil
 }
 

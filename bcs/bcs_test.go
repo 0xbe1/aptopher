@@ -226,6 +226,24 @@ func TestFixedBytesNoCopy(t *testing.T) {
 	}
 }
 
+func TestBytesNoCopy(t *testing.T) {
+	// Serialize bytes with length prefix
+	s := NewSerializer()
+	value := []byte{0x01, 0x02, 0x03, 0x04}
+	s.Bytes(value)
+	data := s.ToBytes()
+
+	// Deserialize with zero-copy
+	d := NewDeserializer(data)
+	got := d.BytesNoCopy()
+	if !bytes.Equal(got, value) {
+		t.Errorf("BytesNoCopy = %v, want %v", got, value)
+	}
+	if d.Remaining() != 0 {
+		t.Errorf("BytesNoCopy should consume all bytes, remaining: %d", d.Remaining())
+	}
+}
+
 func TestU128(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -428,5 +446,29 @@ func BenchmarkFixedBytesNoCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		d := NewDeserializer(data)
 		_ = d.FixedBytesNoCopy(32)
+	}
+}
+
+func BenchmarkBytes(b *testing.B) {
+	// Serialize bytes with length prefix
+	s := NewSerializer()
+	s.Bytes(make([]byte, 64)) // signature size
+	data := s.ToBytes()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := NewDeserializer(data)
+		_ = d.Bytes()
+	}
+}
+
+func BenchmarkBytesNoCopy(b *testing.B) {
+	// Serialize bytes with length prefix
+	s := NewSerializer()
+	s.Bytes(make([]byte, 64)) // signature size
+	data := s.ToBytes()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d := NewDeserializer(data)
+		_ = d.BytesNoCopy()
 	}
 }

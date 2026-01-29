@@ -158,3 +158,12 @@ func TestSha3256(t *testing.T) {
 		t.Errorf("SHA3-256 hash mismatch")
 	}
 }
+
+func BenchmarkAuthenticationKey(b *testing.B) {
+	// Ed25519 public key (32 bytes)
+	pubKey := make([]byte, 32)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = AuthenticationKey(pubKey, Ed25519Scheme)
+	}
+}

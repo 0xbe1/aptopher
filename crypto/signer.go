@@ -39,8 +39,10 @@ type PrivateKey interface {
 // AuthenticationKey derives an authentication key from a public key and scheme.
 // For single-key authenticators: SHA3-256(pubkey || scheme)
 func AuthenticationKey(pubKey []byte, scheme SignatureScheme) [32]byte {
-	data := make([]byte, len(pubKey)+1)
-	copy(data, pubKey)
-	data[len(pubKey)] = byte(scheme)
-	return Sha3256(data)
+	// Use stack-allocated array to avoid heap allocation.
+	// Max size: 33 bytes (secp256k1 compressed) + 1 byte scheme = 34 bytes
+	var buf [34]byte
+	n := copy(buf[:], pubKey)
+	buf[n] = byte(scheme)
+	return Sha3256(buf[:n+1])
 }
